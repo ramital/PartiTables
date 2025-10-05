@@ -92,18 +92,18 @@ await auditRepo.SaveAsync(audit);
 ```
 
 ## Enterprise Patterns
-? **RBAC** (Role-Based Access Control)  
-? **Quota Management**  
-? **Audit Logging**  
-? **Session Tracking**  
-? **Security Events**  
-? **Feature Flags**  
+  **RBAC** (Role-Based Access Control)  
+  **Quota Management**  
+  **Audit Logging**  
+  **Session Tracking**  
+  **Security Events**  
+  **Feature Flags**  
 
 ## Use Cases
-- ?? Multi-tenant SaaS platforms
-- ?? Enterprise applications
-- ?? Compliance-required systems
-- ?? Analytics and reporting
+-    Multi-tenant SaaS platforms
+-    Enterprise applications
+-    Compliance-required systems
+-    Analytics and reporting
 
 ## Next Steps
-?? **Demo 5** shows security-focused multi-table patterns
+   **Demo 5** shows security-focused multi-table patterns

@@ -13,10 +13,10 @@ This demo shows the **same patterns as Demo 2** applied to a completely differen
 ## Domain Model
 ```
 Customer (Partition)
-??? Orders (many) - Purchase history
-??? Addresses (many) - Shipping/Billing
-??? PaymentMethods (many) - Cards, PayPal
-??? Preferences (many) - Settings
+    Orders (many) - Purchase history
+    Addresses (many) - Shipping/Billing
+    PaymentMethods (many) - Cards, PayPal
+    Preferences (many) - Settings
 ```
 
 ## RowKey Patterns
@@ -55,17 +55,17 @@ var totalSpent = orders.Where(o => o.Status != "Cancelled")
 ```
 
 ## Use Cases
-- ?? Customer order history
-- ?? Order tracking and fulfillment
-- ?? Address management
-- ?? Payment method storage
-- ?? Customer preferences
+-    Customer order history
+-    Order tracking and fulfillment
+-    Address management
+-    Payment method storage
+-    Customer preferences
 
 ## Key Insights
-? Same code patterns across different domains  
-? Flexible partition design  
-? Efficient querying  
-? Easy to understand and maintain  
+  Same code patterns across different domains  
+  Flexible partition design  
+  Efficient querying  
+  Easy to understand and maintain  
 
 ## Next Steps
-?? **Demo 4** shows how to coordinate multiple tables for enterprise SaaS
+   **Demo 4** shows how to coordinate multiple tables for enterprise SaaS

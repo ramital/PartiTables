@@ -14,24 +14,24 @@ This demo shows **security patterns** using **2 separate Azure Tables** for auth
 
 ## Architecture
 ```
-????????????????????????????????
-?  Table 1: UserCredentials    ?
-?  PartitionKey: UserId        ?
-?  - Password History          ?
-?  - Login Attempts            ?
-?  - MFA Devices               ?
-????????????????????????????????
+                                
+   Table 1: UserCredentials     
+   PartitionKey: UserId         
+   - Password History           
+   - Login Attempts             
+   - MFA Devices                
+                                
 
-????????????????????????????????
-?  Table 2: UserPermissions    ?
-?  PartitionKey: UserId        ?
-?  - Role Assignments          ?
-?  - Resource Permissions      ?
-?  - Access Tokens             ?
-????????????????????????????????
+                                
+   Table 2: UserPermissions     
+   PartitionKey: UserId         
+   - Role Assignments           
+   - Resource Permissions       
+   - Access Tokens              
+                                
 ```
 
-## Why Two Tables?
+## Why Two Tables 
 - **Security**: Authentication data isolated from authorization
 - **Access Control**: Different teams manage different aspects
 - **Performance**: Query only what you need
@@ -126,14 +126,14 @@ foreach (var token in tokens.Where(t => !t.IsRevoked))
 ```
 
 ## Security Patterns
-? **Password History** - Track and prevent reuse  
-? **Password Expiration** - Force rotation  
-? **MFA Support** - Multiple device types  
-? **Login Tracking** - Detect suspicious activity  
-? **Role Hierarchy** - Granular permissions  
-? **Resource-Level Permissions** - Fine-grained control  
-? **Token Lifecycle** - Issue, refresh, revoke  
-? **Security Analytics** - Monitor and alert  
+  **Password History** - Track and prevent reuse  
+  **Password Expiration** - Force rotation  
+  **MFA Support** - Multiple device types  
+  **Login Tracking** - Detect suspicious activity  
+  **Role Hierarchy** - Granular permissions  
+  **Resource-Level Permissions** - Fine-grained control  
+  **Token Lifecycle** - Issue, refresh, revoke  
+  **Security Analytics** - Monitor and alert  
 
 ## Security Analytics
 ```csharp
@@ -156,11 +156,11 @@ var activeTokens = tokens.Where(t =>
 ```
 
 ## Use Cases
-- ?? User authentication systems
-- ??? Authorization frameworks
-- ?? Identity management
-- ?? Compliance and audit
-- ?? Security monitoring
+-    User authentication systems
+-     Authorization frameworks
+-    Identity management
+-    Compliance and audit
+-    Security monitoring
 
 ## Best Practices
 - Hash passwords with bcrypt/argon2
@@ -178,4 +178,4 @@ Check Azure Storage Explorer to see both tables:
 Both use `UserId` as PartitionKey for efficient queries.
 
 ## Next Steps
-?? Combine patterns from all demos for production systems
+   Combine patterns from all demos for production systems

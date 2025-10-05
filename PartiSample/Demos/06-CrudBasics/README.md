@@ -95,5 +95,3 @@ var urgent = project.Tasks.Where(t =>
 - Keep related data in the same partition
 - Use meaningful RowKey patterns
 
-## Next Steps
-?? Check out the advanced demos (4 & 5) for multi-table scenarios

@@ -13,9 +13,9 @@ This demo shows **strongly-typed entity models** similar to Entity Framework, wi
 ## Domain Model
 ```
 Patient (Partition)
-??? Meta (1 record) - Demographics
-??? Consents (many) - HIPAA compliance
-??? Devices (many) - Linked wearables
+    Meta (1 record) - Demographics
+    Consents (many) - HIPAA compliance
+    Devices (many) - Linked wearables
 ```
 
 ## RowKey Patterns
@@ -53,10 +53,10 @@ var consents = await repo.QueryCollectionAsync(tenantId, p => p.Consents);
 ```
 
 ## Benefits
-? IntelliSense and compile-time safety  
-? No manual RowKey construction  
-? Easy to maintain and refactor  
-? Perfect for complex domains  
+  IntelliSense and compile-time safety  
+  No manual RowKey construction  
+  Easy to maintain and refactor  
+  Perfect for complex domains  
 
 ## Next Steps
-?? **Demo 3** shows the same pattern in an e-commerce context
+   **Demo 3** shows the same pattern in an e-commerce context
