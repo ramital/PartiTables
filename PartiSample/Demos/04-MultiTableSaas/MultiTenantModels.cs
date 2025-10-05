@@ -24,46 +24,31 @@ public class TenantConfiguration
     public List<TenantQuota> Quotas { get; set; } = new();
 }
 
-public class TenantSettings : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-setting-{Category}-{Key}")]
+public class TenantSettings : RowEntity
 {
     public string Category { get; set; } = default!;
     public string Key { get; set; } = default!;
     public string Value { get; set; } = default!;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        return $"{tenantId}-setting-{Category}-{Key}";
-    }
 }
 
-public class TenantFeature : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-feature-{FeatureName}")]
+public class TenantFeature : RowEntity
 {
     public string FeatureName { get; set; } = default!;
     public bool IsEnabled { get; set; }
     public int UsageLimit { get; set; }
     public DateTimeOffset EnabledDate { get; set; } = DateTimeOffset.UtcNow;
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        return $"{tenantId}-feature-{FeatureName}";
-    }
 }
 
-public class TenantQuota : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-quota-{ResourceType}")]
+public class TenantQuota : RowEntity
 {
     public string ResourceType { get; set; } = default!; // Users, Storage, APIRequests
     public int Limit { get; set; }
     public int Used { get; set; }
     public DateTimeOffset ResetDate { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        return $"{tenantId}-quota-{ResourceType}";
-    }
 }
 
 /// <summary>
@@ -86,7 +71,8 @@ public class TenantUsers
     public List<UserSession> Sessions { get; set; } = new();
 }
 
-public class User : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-user-{UserId}")]
+public class User : RowEntity
 {
     public string UserId { get; set; } = Guid.NewGuid().ToString("N")[..12];
     public string Email { get; set; } = default!;
@@ -95,44 +81,31 @@ public class User : RowEntity, IRowKeyBuilder
     public string Status { get; set; } = "Active"; // Active, Suspended, Deleted
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? LastLoginAt { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        return $"{tenantId}-user-{UserId}";
-    }
 }
 
-public class UserRole : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-role-{UserId}-{RoleName}")]
+public class UserRole : RowEntity
 {
     public string UserId { get; set; } = default!;
     public string RoleName { get; set; } = default!; // Admin, Manager, User, ReadOnly
     public string[] Permissions { get; set; } = Array.Empty<string>();
     public DateTimeOffset AssignedAt { get; set; } = DateTimeOffset.UtcNow;
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        return $"{tenantId}-role-{UserId}-{RoleName}";
-    }
 }
 
-public class UserSession : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-session-{UserId}-{SessionId}")]
+public class UserSession : RowEntity
 {
     public string UserId { get; set; } = default!;
-    public string SessionId { get; set; } = Guid.NewGuid().ToString("N");
+    
+    // SessionId with timestamp prefix for chronological sorting: "20240131-103045-a1b2c3d4e5f6"
+    public string SessionId { get; set; } = 
+        $"{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..12]}";
+    
     public string IpAddress { get; set; } = default!;
     public string UserAgent { get; set; } = default!;
     public DateTimeOffset StartedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ExpiresAt { get; set; }
     public bool IsActive { get; set; } = true;
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        var timestamp = StartedAt.ToUnixTimeSeconds();
-        return $"{tenantId}-session-{UserId}-{timestamp}";
-    }
 }
 
 /// <summary>
@@ -155,8 +128,13 @@ public class TenantAuditLog
     public List<DataChange> DataChanges { get; set; } = new();
 }
 
-public class AuditEntry : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-audit-{EntryId}")]
+public class AuditEntry : RowEntity
 {
+    // EntryId with timestamp prefix for chronological sorting: "20240131-103045-action-a1b2"
+    public string EntryId { get; set; } = 
+        $"{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+    
     public string UserId { get; set; } = default!;
     public string Action { get; set; } = default!; // Login, Logout, Create, Update, Delete
     public string ResourceType { get; set; } = default!;
@@ -164,34 +142,30 @@ public class AuditEntry : RowEntity, IRowKeyBuilder
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
     public string Details { get; set; } = default!;
     public bool IsSuccess { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        var timestamp = Timestamp.ToUnixTimeSeconds();
-        return $"{tenantId}-audit-{timestamp}-{Action}-{Guid.NewGuid():N}";
-    }
 }
 
-public class SecurityEvent : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-security-{EventId}")]
+public class SecurityEvent : RowEntity
 {
+    // EventId with timestamp prefix for chronological sorting: "20240131-103045-type-a1b2"
+    public string EventId { get; set; } = 
+        $"{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+    
     public string EventType { get; set; } = default!; // FailedLogin, Unauthorized, SuspiciousActivity
     public string UserId { get; set; } = default!;
     public string IpAddress { get; set; } = default!;
     public string Severity { get; set; } = "Medium"; // Low, Medium, High, Critical
     public DateTimeOffset DetectedAt { get; set; } = DateTimeOffset.UtcNow;
     public string Description { get; set; } = default!;
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        var timestamp = DetectedAt.ToUnixTimeSeconds();
-        return $"{tenantId}-security-{timestamp}-{EventType}";
-    }
 }
 
-public class DataChange : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{TenantId}-datachange-{ChangeId}")]
+public class DataChange : RowEntity
 {
+    // ChangeId with timestamp prefix for chronological sorting: "20240131-103045-type-a1b2"
+    public string ChangeId { get; set; } = 
+        $"{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+    
     public string UserId { get; set; } = default!;
     public string EntityType { get; set; } = default!;
     public string EntityId { get; set; } = default!;
@@ -199,11 +173,4 @@ public class DataChange : RowEntity, IRowKeyBuilder
     public DateTimeOffset ChangedAt { get; set; } = DateTimeOffset.UtcNow;
     public string OldValue { get; set; } = default!;
     public string NewValue { get; set; } = default!;
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var tenantId = context.GetParentProperty<string>("TenantId");
-        var timestamp = ChangedAt.ToUnixTimeSeconds();
-        return $"{tenantId}-datachange-{timestamp}-{EntityType}";
-    }
 }

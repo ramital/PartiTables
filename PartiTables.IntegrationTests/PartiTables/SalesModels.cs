@@ -19,9 +19,10 @@ public class SalesData
 
 /// <summary>
 /// Individual sales transaction
-/// RowKey pattern: {storeId}-txn-{transactionId}
+/// RowKey pattern: {StoreId}-{TransactionId}
 /// </summary>
-public class SalesTransaction : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{StoreId}-{TransactionId}")]
+public class SalesTransaction : RowEntity
 {
     public string TransactionId { get; set; } = default!;
     public string CustomerId { get; set; } = default!;
@@ -31,10 +32,4 @@ public class SalesTransaction : RowEntity, IRowKeyBuilder
     public decimal TotalAmount { get; set; }
     public string Region { get; set; } = default!;
     public DateTimeOffset TransactionDate { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var storeId = context.GetParentProperty<string>("StoreId");
-        return $"{storeId}-{TransactionId}";
-    }
 }

@@ -7,7 +7,7 @@
     
     <!-- NuGet Package Metadata -->
     <PackageId>PartiTables</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>PartiTech</Authors>
     <Company>PartiTech</Company>
     <Description>Azure Table Storage made simple for .NET. Entity Framework-style data access with automatic batching, retry logic, and type-safe operations. 95% cheaper than other NoSQL solutions.</Description>
@@ -19,7 +19,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <Copyright>© 2025 PartiTech</Copyright>
-    <PackageReleaseNotes>v1.0.1 - Updated README and package metadata with improved documentation and icon.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0.2 - Updated README and Enhance RowKey generation.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

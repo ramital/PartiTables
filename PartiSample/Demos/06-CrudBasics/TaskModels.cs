@@ -24,9 +24,10 @@ public class TaskProject
 
 /// <summary>
 /// Project task entity
-/// RowKey pattern: {projectId}-task-{taskId}
+/// RowKey pattern: {ProjectId}-task-{TaskId}
 /// </summary>
-public class ProjectTask : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{ProjectId}-task-{TaskId}")]
+public class ProjectTask : RowEntity
 {
     public string TaskId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public string Title { get; set; } = default!;
@@ -39,41 +40,34 @@ public class ProjectTask : RowEntity, IRowKeyBuilder
     public DateTimeOffset? CompletedAt { get; set; }
     public int EstimatedHours { get; set; }
     public string[] Tags { get; set; } = Array.Empty<string>();
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var projectId = context.GetParentProperty<string>("ProjectId");
-        return $"{projectId}-task-{TaskId}";
-    }
 }
 
 /// <summary>
 /// Task comment entity
-/// RowKey pattern: {projectId}-comment-{taskId}-{timestamp}
-/// Allows sorting comments by creation time
+/// RowKey pattern: {ProjectId}-comment-{TaskId}-{CommentId}
+/// CommentId includes timestamp prefix for chronological sorting
 /// </summary>
-public class TaskComment : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{ProjectId}-comment-{TaskId}-{CommentId}")]
+public class TaskComment : RowEntity
 {
     public string TaskId { get; set; } = default!;
-    public string CommentId { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    
+    // CommentId with timestamp prefix for sorting: "20240131-103045-a1b2c3"
+    public string CommentId { get; set; } = 
+        $"{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+    
     public string Author { get; set; } = default!;
     public string Text { get; set; } = default!;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? EditedAt { get; set; }
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var projectId = context.GetParentProperty<string>("ProjectId");
-        var timestamp = CreatedAt.ToUnixTimeSeconds();
-        return $"{projectId}-comment-{TaskId}-{timestamp}";
-    }
 }
 
 /// <summary>
 /// Task attachment entity
-/// RowKey pattern: {projectId}-attachment-{taskId}-{attachmentId}
+/// RowKey pattern: {ProjectId}-attachment-{TaskId}-{AttachmentId}
 /// </summary>
-public class TaskAttachment : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{ProjectId}-attachment-{TaskId}-{AttachmentId}")]
+public class TaskAttachment : RowEntity
 {
     public string TaskId { get; set; } = default!;
     public string AttachmentId { get; set; } = Guid.NewGuid().ToString("N")[..8];
@@ -83,10 +77,4 @@ public class TaskAttachment : RowEntity, IRowKeyBuilder
     public string StorageUrl { get; set; } = default!;
     public DateTimeOffset UploadedAt { get; set; } = DateTimeOffset.UtcNow;
     public string UploadedBy { get; set; } = default!;
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var projectId = context.GetParentProperty<string>("ProjectId");
-        return $"{projectId}-attachment-{TaskId}-{AttachmentId}";
-    }
 }

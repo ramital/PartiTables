@@ -74,8 +74,18 @@ public abstract class RowEntity
                     else
                     {
                         var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
-                        var convertedValue = Convert.ChangeType(value, targetType);
-                        prop.SetValue(this, convertedValue);
+                        
+                        // Handle DateTimeOffset -> DateTime conversion
+                        // Azure Table Storage stores DateTime as DateTimeOffset
+                        if (value is DateTimeOffset dto && targetType == typeof(DateTime))
+                        {
+                            prop.SetValue(this, dto.DateTime);
+                        }
+                        else
+                        {
+                            var convertedValue = Convert.ChangeType(value, targetType);
+                            prop.SetValue(this, convertedValue);
+                        }
                     }
                 }
                 catch

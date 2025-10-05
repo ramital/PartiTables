@@ -1,4 +1,5 @@
 using Azure.Data.Tables;
+using PartiTables;
 using PartiTables.Interfaces;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -59,6 +60,34 @@ public class PartitionRepository<T> where T : class, new()
 
     private Func<string, bool> BuildRowKeyMatcher(Type itemType, RowKeyPrefixAttribute attr)
     {
+        // First priority: Check for RowKeyPattern attribute
+        var patternAttr = itemType.GetCustomAttribute<RowKeyPatternAttribute>();
+        if (patternAttr != null)
+        {
+            // Use explicit keyword if provided, otherwise extract from pattern
+            var keyword = patternAttr.TypeKeyword ?? ExtractKeywordFromPattern(patternAttr.Pattern);
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                var keywordLower = keyword.ToLower();
+                return rowKey => rowKey.ToLower().Contains(keywordLower);
+            }
+        }
+        
+        // Second priority: Check if entity explicitly declares its type keyword (legacy interface)
+        var typeKeywordProperty = itemType.GetProperty("TypeKeyword", 
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        
+        if (typeKeywordProperty != null && typeKeywordProperty.PropertyType == typeof(string))
+        {
+            var keyword = typeKeywordProperty.GetValue(null) as string;
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                var keywordLower = keyword.ToLower();
+                return rowKey => rowKey.ToLower().Contains(keywordLower);
+            }
+        }
+        
+        // Third priority: Use IRowKeyBuilder to infer pattern
         if (typeof(IRowKeyBuilder).IsAssignableFrom(itemType))
         {
             try
@@ -91,34 +120,71 @@ public class PartitionRepository<T> where T : class, new()
             catch { }
         }
         
+        // Fourth priority: Use prefix if provided
         if (!string.IsNullOrEmpty(attr.Prefix))
         {
             return rowKey => rowKey.StartsWith(attr.Prefix);
         }
         
+        // Fallback: Match everything (not ideal)
         return rowKey => true;
+    }
+
+    private string? ExtractKeywordFromPattern(string pattern)
+    {
+        // Extract static keywords from pattern
+        // Example: "{CustomerId}-order-{OrderId}" -> "order"
+        var parts = pattern.ToLower()
+            .Split('-', StringSplitOptions.RemoveEmptyEntries)
+            .Where(p => !p.StartsWith('{') && !p.EndsWith('}'))
+            .Where(p => p.All(char.IsLetter) && p.Length > 2)
+            .ToList();
+        
+        // Return the first meaningful keyword found
+        return parts.FirstOrDefault();
     }
 
     private bool MatchesPattern(string rowKey, string pattern)
     {
         var patternParts = pattern.Split('-', StringSplitOptions.RemoveEmptyEntries)
-            .Select(p => p.ToLower()).ToList();
-        var rowKeyParts = rowKey.ToLower().Split('-', StringSplitOptions.RemoveEmptyEntries).ToList();
+            .Select(p => p.ToLower())
+            .ToList();
+        var rowKeyParts = rowKey.ToLower().Split('-', StringSplitOptions.RemoveEmptyEntries);
         
-        var keywords = new[] { "meta", "consent", "device", "profile", "audit", "log", "item", 
-                               "detail", "user", "order", "payment", "setting", "feature", "quota",
-                               "role", "session", "comment", "attachment", "task", "token", "mfa",
-                               "password", "login", "resource", "security", "datachange" };
-        
+        // Extract static (non-ID) keywords from pattern
+        // These are parts that look like entity type identifiers (alphabetic, common terms)
         var staticKeywords = patternParts
-            .Where(p => keywords.Contains(p))
+            .Where(p => IsStaticKeyword(p))
             .Distinct()
             .ToList();
         
         if (staticKeywords.Count == 0)
-            return true;
+            return true; // No distinctive keywords to match
         
+        // Row key must contain all static keywords from pattern
         return staticKeywords.All(keyword => rowKeyParts.Contains(keyword));
+    }
+
+    private bool IsStaticKeyword(string part)
+    {
+        // A part is considered a static keyword if it's:
+        // 1. All alphabetic characters (not a number or GUID-like)
+        // 2. Not "sample" or "id" or "dummy" (our dummy data)
+        // 3. Longer than 2 characters (avoid noise like "v1")
+        
+        if (part.Length <= 2)
+            return false;
+            
+        if (part.Equals("sample", StringComparison.OrdinalIgnoreCase) ||
+            part.Equals("id", StringComparison.OrdinalIgnoreCase) ||
+            part.Equals("dummy", StringComparison.OrdinalIgnoreCase))
+            return false;
+        
+        // Check if it's all alphabetic (not a number, GUID, or mixed alphanumeric ID)
+        if (!part.All(char.IsLetter))
+            return false;
+            
+        return true;
     }
 
     /// <summary>
@@ -155,10 +221,21 @@ public class PartitionRepository<T> where T : class, new()
             {
                 if (item is RowEntity rowEntity)
                 {
-                    if (item is IRowKeyBuilder builder && string.IsNullOrEmpty(rowEntity.RowKeyId))
+                    // Generate row key if not already set
+                    if (string.IsNullOrEmpty(rowEntity.RowKeyId))
                     {
-                        var context = new RowKeyContext(entity, attr.Prefix, partitionKey);
-                        rowEntity.RowKeyId = builder.BuildRowKey(context);
+                        // Try RowKeyPattern attribute first
+                        var patternAttr = item.GetType().GetCustomAttribute<RowKeyPatternAttribute>();
+                        if (patternAttr != null)
+                        {
+                            rowEntity.RowKeyId = BuildRowKeyFromPattern(patternAttr.Pattern, entity, item);
+                        }
+                        // Fall back to IRowKeyBuilder
+                        else if (item is IRowKeyBuilder builder)
+                        {
+                            var context = new RowKeyContext(entity, attr.Prefix, partitionKey);
+                            rowEntity.RowKeyId = builder.BuildRowKey(context);
+                        }
                     }
                     
                     var tableEntity = rowEntity.ToTableEntity(partitionKey);
@@ -196,6 +273,43 @@ public class PartitionRepository<T> where T : class, new()
             await RollbackBatchesAsync(partitionKey, submittedBatches, ct);
             throw;
         }
+    }
+
+    private string BuildRowKeyFromPattern(string pattern, object parent, object item)
+    {
+        var result = pattern;
+        
+        // Replace placeholders with actual values
+        // Example: "{CustomerId}-order-{OrderId}" -> "customer-123-order-001"
+        
+        // Find all placeholders: {PropertyName}
+        var placeholderRegex = new System.Text.RegularExpressions.Regex(@"\{([^}]+)\}");
+        var matches = placeholderRegex.Matches(pattern);
+        
+        foreach (System.Text.RegularExpressions.Match match in matches)
+        {
+            var propertyName = match.Groups[1].Value;
+            var placeholder = match.Value; // {PropertyName}
+            
+            // Try to get value from item first
+            var itemProp = item.GetType().GetProperty(propertyName);
+            if (itemProp != null)
+            {
+                var value = itemProp.GetValue(item);
+                result = result.Replace(placeholder, value?.ToString() ?? string.Empty);
+                continue;
+            }
+            
+            // Try to get value from parent
+            var parentProp = parent.GetType().GetProperty(propertyName);
+            if (parentProp != null)
+            {
+                var value = parentProp.GetValue(parent);
+                result = result.Replace(placeholder, value?.ToString() ?? string.Empty);
+            }
+        }
+        
+        return result;
     }
 
     private async Task RollbackBatchesAsync(string partitionKey, List<PartitionBatch> submittedBatches, CancellationToken ct)

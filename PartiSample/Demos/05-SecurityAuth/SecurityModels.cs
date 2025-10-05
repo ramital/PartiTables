@@ -22,38 +22,35 @@ public class UserCredentials
     public List<MfaDevice> MfaDevices { get; set; } = new();
 }
 
-public class PasswordHistory : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{UserId}-password-{PasswordId}")]
+public class PasswordHistory : RowEntity
 {
+    // PasswordId with timestamp prefix for chronological sorting: "20240131-103045-a1b2"
+    public string PasswordId { get; set; } = 
+        $"{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..6]}";
+    
     public string PasswordHash { get; set; } = default!;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ExpiresAt { get; set; }
     public bool IsActive { get; set; } = true;
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var userId = context.GetParentProperty<string>("UserId");
-        var timestamp = CreatedAt.ToUnixTimeSeconds();
-        return $"{userId}-password-{timestamp}";
-    }
 }
 
-public class LoginAttempt : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{UserId}-login-{AttemptId}")]
+public class LoginAttempt : RowEntity
 {
+    // AttemptId with timestamp prefix for chronological sorting: "20240131-103045-a1b2c3"
+    public string AttemptId { get; set; } = 
+        $"{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..8]}";
+    
     public DateTimeOffset AttemptedAt { get; set; } = DateTimeOffset.UtcNow;
     public string IpAddress { get; set; } = default!;
     public string UserAgent { get; set; } = default!;
     public bool IsSuccessful { get; set; }
     public string? FailureReason { get; set; }
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var userId = context.GetParentProperty<string>("UserId");
-        var timestamp = AttemptedAt.ToUnixTimeSeconds();
-        return $"{userId}-login-{timestamp}-{Guid.NewGuid():N}";
-    }
 }
 
-public class MfaDevice : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{UserId}-mfa-{DeviceId}")]
+public class MfaDevice : RowEntity
 {
     public string DeviceId { get; set; } = Guid.NewGuid().ToString("N")[..12];
     public string DeviceType { get; set; } = default!; // SMS, TOTP, Email
@@ -62,12 +59,6 @@ public class MfaDevice : RowEntity, IRowKeyBuilder
     public bool IsVerified { get; set; }
     public DateTimeOffset RegisteredAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? LastUsedAt { get; set; }
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var userId = context.GetParentProperty<string>("UserId");
-        return $"{userId}-mfa-{DeviceId}";
-    }
 }
 
 /// <summary>
@@ -91,7 +82,8 @@ public class UserPermissions
     public List<AccessToken> AccessTokens { get; set; } = new();
 }
 
-public class RoleAssignment : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{UserId}-role-{RoleId}-{Scope}")]
+public class RoleAssignment : RowEntity
 {
     public string RoleId { get; set; } = default!;
     public string RoleName { get; set; } = default!; // Admin, Editor, Viewer
@@ -100,15 +92,10 @@ public class RoleAssignment : RowEntity, IRowKeyBuilder
     public DateTimeOffset AssignedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ExpiresAt { get; set; }
     public string AssignedBy { get; set; } = default!;
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var userId = context.GetParentProperty<string>("UserId");
-        return $"{userId}-role-{RoleId}-{Scope}";
-    }
 }
 
-public class ResourcePermission : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{UserId}-resource-{ResourceType}-{ResourceId}")]
+public class ResourcePermission : RowEntity
 {
     public string ResourceType { get; set; } = default!; // Document, Project, Database
     public string ResourceId { get; set; } = default!;
@@ -116,15 +103,10 @@ public class ResourcePermission : RowEntity, IRowKeyBuilder
     public DateTimeOffset GrantedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ExpiresAt { get; set; }
     public string GrantedBy { get; set; } = default!;
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var userId = context.GetParentProperty<string>("UserId");
-        return $"{userId}-resource-{ResourceType}-{ResourceId}";
-    }
 }
 
-public class AccessToken : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{UserId}-token-{TokenType}-{TokenId}")]
+public class AccessToken : RowEntity
 {
     public string TokenId { get; set; } = Guid.NewGuid().ToString("N")[..16];
     public string TokenHash { get; set; } = default!; // Hashed token
@@ -135,10 +117,4 @@ public class AccessToken : RowEntity, IRowKeyBuilder
     public bool IsRevoked { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }
     public string? RevokedReason { get; set; }
-    
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var userId = context.GetParentProperty<string>("UserId");
-        return $"{userId}-token-{TokenType}-{TokenId}";
-    }
 }

@@ -2,7 +2,7 @@
 
 A comprehensive sample application demonstrating **PartiTables** - a powerful library for working with Azure Table Storage using partition-centric patterns.
 
-##   Quick Start
+##    Quick Start
 
 ```bash
 # Run Azurite (Azure Storage Emulator)
@@ -13,18 +13,18 @@ cd PartiSample
 dotnet run
 ```
 
-##   What's Included
+##    What's Included
 
 This demo application showcases **6 comprehensive examples** organized by complexity and use case:
 
 | Demo | Description | Complexity | Tables |
 |------|-------------|------------|--------|
-| **1. Simple Fluent API** | Low-level API without models | Beginner | 1 |
-| **2. Healthcare Patients** | Medical records with auto-keys |   Intermediate | 1 |
-| **3. E-commerce Orders** | Customer orders and profiles |   Intermediate | 1 |
-| **4. Multi-Table SaaS** | Enterprise tenant management |  ? Advanced | 3 |
-| **5. Security & Auth** | Authentication & authorization |  ? Advanced | 2 |
-| **6. CRUD & Query Basics** | Complete operations guide | Beginner | 1 |
+| **1. Simple Fluent API** | Low-level API without models |   Beginner | 1 |
+| **2. Healthcare Patients** | Medical records with declarative patterns |    Intermediate | 1 |
+| **3. E-commerce Orders** | Customer orders and profiles |    Intermediate | 1 |
+| **4. Multi-Table SaaS** | Enterprise tenant management |     Advanced | 3 |
+| **5. Security & Auth** | Authentication & authorization |     Advanced | 2 |
+| **6. CRUD & Query Basics** | Complete operations guide |   Beginner | 1 |
 
 ##   Key Features Demonstrated
 
@@ -32,7 +32,7 @@ This demo application showcases **6 comprehensive examples** organized by comple
 - CRUD operations (Create, Read, Update, Delete)
 - Fluent API for dynamic scenarios
 - Strongly-typed entity models
-- Auto-generated RowKeys via `IRowKeyBuilder`
+- Declarative RowKey patterns with `[RowKeyPattern]`
 - Query by prefix patterns
 - Batch operations
 
@@ -44,8 +44,7 @@ This demo application showcases **6 comprehensive examples** organized by comple
 - Time-sorted entities
 - Security and audit patterns
 
-
-##   Learning Path
+##    Learning Path
 
 ### Beginners Start Here
 1. **Demo 1** - Simple Fluent API
@@ -61,7 +60,7 @@ This demo application showcases **6 comprehensive examples** organized by comple
 ### Intermediate Developers
 3. **Demo 2** - Healthcare Patients
    - Work with domain models
-   - Implement `IRowKeyBuilder`
+   - Use `[RowKeyPattern]` attribute
    - Handle complex relationships
 
 4. **Demo 3** - E-commerce Orders
@@ -80,7 +79,7 @@ This demo application showcases **6 comprehensive examples** organized by comple
    - Track security events
    - Manage tokens and permissions
 
-##   Key Concepts
+##    Key Concepts
 
 ### Partition-Centric Design
 PartiTables uses a **partition-first approach** where:
@@ -97,19 +96,24 @@ RowKeys:
   - "patient-123-device-dev001"
 ```
 
-### Auto-Generated RowKeys
-Implement `IRowKeyBuilder` for automatic key generation:
+### Declarative RowKey Patterns
+Use the `[RowKeyPattern]` attribute for automatic key generation:
 
 ```csharp
-public class Consent : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{PatientId}-consent-{ConsentId}-v{Version}")]
+public class Consent : RowEntity
 {
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var patientId = context.GetParentProperty<string>("PatientId");
-        return $"{patientId}-consent-{ConsentId}-v{Version}";
-    }
+    public string ConsentId { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    public int Version { get; set; } = 1;
+    public string Type { get; set; } = "Required";
 }
 ```
+
+**Benefits:**
+-   Self-documenting - pattern visible at class level
+-   60% less code than manual implementation
+-   Automatic key generation from properties
+-   Compile-time validated
 
 ### Efficient Queries
 Load only what you need:
@@ -125,7 +129,7 @@ var consents = await repo.QueryCollectionAsync(
 );
 ```
 
-##   Technologies Used
+##     Technologies Used
 
 - **.NET 8** - Latest framework
 - **Azure Table Storage** - NoSQL storage
@@ -133,7 +137,7 @@ var consents = await repo.QueryCollectionAsync(
 - **PartiTables** - Partition-centric library
 - **Polly** - Resilience policies
 
-##   Documentation
+##    Documentation
 
 Each demo folder contains:
 - **README.md** - Detailed explanation
@@ -141,7 +145,7 @@ Each demo folder contains:
 - **Best practices** - Do's and don'ts
 - **Use cases** - When to use each pattern
 
-##  ? Development Setup
+##    Development Setup
 
 ### Prerequisites
 - .NET 8 SDK
@@ -174,7 +178,7 @@ Use **Azure Storage Explorer** or **Azurite Explorer** to:
 - Examine row keys
 - Query data directly
 
-##   Code Style
+##    Code Style
 
 ### Comments
 - **Clear and concise** - No unnecessary verbosity
@@ -188,7 +192,7 @@ Use **Azure Storage Explorer** or **Azurite Explorer** to:
 - **Real-world scenarios** - Practical examples
 - **Consistent patterns** - Easy to understand
 
-##   Contributing
+##    Contributing
 
 Improvements welcome! Consider:
 - Additional demo scenarios
@@ -196,11 +200,11 @@ Improvements welcome! Consider:
 - Performance optimizations
 - Bug fixes
 
-##   License
+##    License
 
 This demo application is provided as-is for educational purposes.
 
-##   Related Links
+##    Related Links
 
 - [PartiTables Library](../PartiTables/)
 - [Azure Table Storage Documentation](https://docs.microsoft.com/azure/storage/tables/)
@@ -208,6 +212,6 @@ This demo application is provided as-is for educational purposes.
 
 ---
 
-**Happy Learning!**  
+**Happy Learning!**   
 
 Start with Demo 1 if you're new, or jump to any demo that interests you.

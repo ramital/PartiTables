@@ -1,4 +1,4 @@
-namespace PartiTables;
+namespace PartiTables.Interfaces;
 
 /// <summary>
 /// Interface for entities that can generate their own row keys.

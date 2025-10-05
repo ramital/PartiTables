@@ -22,20 +22,22 @@ Customer (Partition)
 ## RowKey Patterns
 | Entity | Pattern | Example |
 |--------|---------|---------|
-| Order | `{customerId}-order-{timestamp}-{id}` | `cust-john-order-1234567890-a1b2c3` |
-| Address | `{customerId}-address-{id}` | `cust-john-address-x7y8z9` |
-| Payment | `{customerId}-payment-{id}` | `cust-john-payment-m3n4p5` |
-| Preference | `{customerId}-pref-{key}-{id}` | `cust-john-pref-newsletter-q6r7s8` |
+| Order | `{CustomerId}-order-{OrderDate}-{OrderId}` | `cust-john-order-1234567890-a1b2c3` |
+| Address | `{CustomerId}-address-{AddressId}` | `cust-john-address-x7y8z9` |
+| Payment | `{CustomerId}-payment-{PaymentId}` | `cust-john-payment-m3n4p5` |
+| Preference | `{CustomerId}-pref-{Key}-{PreferenceId}` | `cust-john-pref-newsletter-q6r7s8` |
 
 ## Key Features
 
-### Order Sorting by Date
+### Declarative RowKey Patterns
 ```csharp
-public string BuildRowKey(RowKeyContext context)
+[RowKeyPattern("{CustomerId}-order-{OrderDate}-{OrderId}")]
+public class Order : RowEntity
 {
-    var customerId = context.GetParentProperty<string>("CustomerId");
-    var timestamp = OrderDate.ToUnixTimeSeconds();
-    return $"{customerId}-order-{timestamp}-{OrderId}";
+    public string OrderId { get; set; } = Guid.NewGuid().ToString("N")[..12];
+    public string Status { get; set; } = "Pending";
+    public decimal TotalAmount { get; set; }
+    public DateTimeOffset OrderDate { get; set; } = DateTimeOffset.UtcNow;
 }
 ```
 This pattern allows natural sorting by order date!
@@ -55,17 +57,17 @@ var totalSpent = orders.Where(o => o.Status != "Cancelled")
 ```
 
 ## Use Cases
--    Customer order history
--    Order tracking and fulfillment
--    Address management
--    Payment method storage
--    Customer preferences
+- ?? Customer order history
+- ?? Order tracking and fulfillment
+- ?? Address management
+- ?? Payment method storage
+- ?? Customer preferences
 
 ## Key Insights
-  Same code patterns across different domains  
-  Flexible partition design  
-  Efficient querying  
-  Easy to understand and maintain  
+? Same code patterns across different domains  
+? Flexible partition design  
+? Efficient querying  
+? Easy to understand and maintain  
 
 ## Next Steps
-   **Demo 4** shows how to coordinate multiple tables for enterprise SaaS
+? **Demo 4** shows how to coordinate multiple tables for enterprise SaaS

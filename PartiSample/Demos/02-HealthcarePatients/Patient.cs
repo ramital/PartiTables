@@ -4,7 +4,7 @@ namespace PartiSample.Models;
 
 /// <summary>
 /// Healthcare patient entity with related medical records
-/// Uses auto-generated RowKeys via IRowKeyBuilder
+/// Uses auto-generated RowKeys via RowKeyPattern attribute
 /// </summary>
 [TablePartition("PatientData", "{TenantId}")]
 public class Patient
@@ -24,28 +24,24 @@ public class Patient
 
 /// <summary>
 /// Patient metadata (demographics, contact info)
-/// RowKey pattern: {patientId}-meta
+/// RowKey pattern: {PatientId}-meta
 /// </summary>
-public class PatientMeta : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{PatientId}-meta")]
+public class PatientMeta : RowEntity
 {
     public string? Email { get; set; }
     public string? Status { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public DateTime? DateOfBirth { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var patientId = context.GetParentProperty<string>("PatientId");
-        return $"{patientId}-meta";
-    }
 }
 
 /// <summary>
 /// Patient consent records (HIPAA compliance)
-/// RowKey pattern: {patientId}-consent-{consentId}-v{version}
+/// RowKey pattern: {PatientId}-consent-{ConsentId}-v{Version}
 /// </summary>
-public class Consent : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{PatientId}-consent-{ConsentId}-v{Version}")]
+public class Consent : RowEntity
 {
     public string ConsentId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public int Version { get; set; } = 1;
@@ -53,28 +49,17 @@ public class Consent : RowEntity, IRowKeyBuilder
     public string Status { get; set; } = "Granted";
     public DateTimeOffset ConsentAt { get; set; } = DateTimeOffset.UtcNow;
     public string? Description { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var patientId = context.GetParentProperty<string>("PatientId");
-        return $"{patientId}-consent-{ConsentId}-v{Version}";
-    }
 }
 
 /// <summary>
 /// Linked medical devices (wearables, monitors)
-/// RowKey pattern: {patientId}-device-{deviceId}
+/// RowKey pattern: {PatientId}-device-{DeviceId}
 /// </summary>
-public class DeviceLink : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{PatientId}-device-{DeviceId}")]
+public class DeviceLink : RowEntity
 {
     public string DeviceId { get; set; } = default!;
     public string? Model { get; set; }
     public string? Manufacturer { get; set; }
     public string? MappingStatus { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var patientId = context.GetParentProperty<string>("PatientId");
-        return $"{patientId}-device-{DeviceId}";
-    }
 }

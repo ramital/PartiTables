@@ -27,32 +27,30 @@ public class CustomerOrders
 
 /// <summary>
 /// Customer order record
-/// RowKey pattern: {customerId}-order-{timestamp}-{orderId}
-/// Allows sorting by date while maintaining uniqueness
+/// RowKey pattern: {CustomerId}-order-{OrderId}
+/// OrderId includes timestamp for chronological sorting
 /// </summary>
-public class Order : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{CustomerId}-order-{OrderId}")]
+public class Order : RowEntity
 {
-    public string OrderId { get; set; } = Guid.NewGuid().ToString("N")[..12];
+    // OrderId with timestamp prefix for sorting: "20240131-a1b2c3d4e5f6"
+    public string OrderId { get; set; } =
+        $"{DateTimeOffset.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..12]}";
+
     public string Status { get; set; } = "Pending"; // Pending, Processing, Shipped, Delivered, Cancelled
     public decimal TotalAmount { get; set; }
     public DateTimeOffset OrderDate { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ShippedDate { get; set; }
     public string? TrackingNumber { get; set; }
     public int ItemCount { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var customerId = context.GetParentProperty<string>("CustomerId");
-        var timestamp = OrderDate.ToUnixTimeSeconds();
-        return $"{customerId}-order-{timestamp}-{OrderId}";
-    }
 }
 
 /// <summary>
 /// Shipping or billing address
-/// RowKey pattern: {customerId}-address-{addressId}
+/// RowKey pattern: {CustomerId}-address-{AddressId}
 /// </summary>
-public class ShippingAddress : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{CustomerId}-address-{AddressId}")]
+public class ShippingAddress : RowEntity
 {
     public string AddressId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public string AddressType { get; set; } = "Shipping"; // Shipping, Billing, Both
@@ -62,19 +60,14 @@ public class ShippingAddress : RowEntity, IRowKeyBuilder
     public string ZipCode { get; set; } = default!;
     public string Country { get; set; } = "USA";
     public bool IsDefault { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var customerId = context.GetParentProperty<string>("CustomerId");
-        return $"{customerId}-address-{AddressId}";
-    }
 }
 
 /// <summary>
 /// Payment method (credit card, PayPal, etc.)
-/// RowKey pattern: {customerId}-payment-{paymentId}
+/// RowKey pattern: {CustomerId}-payment-{PaymentId}
 /// </summary>
-public class PaymentMethod : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{CustomerId}-payment-{PaymentId}")]
+public class PaymentMethod : RowEntity
 {
     public string PaymentId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public string Type { get; set; } = "CreditCard"; // CreditCard, PayPal, BankTransfer
@@ -83,29 +76,18 @@ public class PaymentMethod : RowEntity, IRowKeyBuilder
     public string ExpiryMonth { get; set; } = default!;
     public string ExpiryYear { get; set; } = default!;
     public bool IsDefault { get; set; }
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var customerId = context.GetParentProperty<string>("CustomerId");
-        return $"{customerId}-payment-{PaymentId}";
-    }
 }
 
 /// <summary>
 /// Customer preferences and settings
-/// RowKey pattern: {customerId}-pref-{key}-{preferenceId}
+/// RowKey pattern: {CustomerId}-pref-{Key}-{PreferenceId}
 /// </summary>
-public class CustomerPreference : RowEntity, IRowKeyBuilder
+[RowKeyPattern("{CustomerId}-pref-{Key}-{PreferenceId}")]
+public class CustomerPreference : RowEntity
 {
     public string PreferenceId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public string Category { get; set; } = default!; // Notifications, Privacy, etc.
     public string Key { get; set; } = default!; // newsletter, sms_notifications, etc.
     public string Value { get; set; } = default!;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-
-    public string BuildRowKey(RowKeyContext context)
-    {
-        var customerId = context.GetParentProperty<string>("CustomerId");
-        return $"{customerId}-pref-{Key}-{PreferenceId}";
-    }
 }
