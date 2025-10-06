@@ -9,11 +9,11 @@
 
 Azure Table Storage is **95% cheaper** than other NoSQL solutions and blazing fast — but painful to use. PartiTables fixes that by providing clean, Entity Framework-style data access patterns.
 
-**Save Money** - $10/month instead of $240/month  
 **Type-Safe** - IntelliSense, compile-time checking  
 **Auto-Retry** - Built-in resilience with Polly  
 **Batch Operations** - Save multiple entities atomically  
 **Less Code** - One class replaces hundreds of lines  
+**Save Money** - Azure Storage is cheap and scales infinitely
 
 ---
 
@@ -26,6 +26,20 @@ dotnet add package PartiTables
 ---
 
 ## 🚀 Quick Start
+
+### Initialize Repository  
+```csharp
+services.AddPartiTables(opts => {
+    opts.ConnectionString = "UseDevelopmentStorage=true"; // or your Azure connection string
+    opts.TableName = "Default";
+});
+services.AddPartitionRepository<Customer>();
+services.AddPartitionRepository<User>();
+
+// Use it
+var custRepo = serviceProvider.GetRequiredService<PartitionRepository<Customer>>();
+var userRepo = serviceProvider.GetRequiredService<PartitionRepository<Customer>>();
+```
 
 ### Before vs After
 
@@ -264,6 +278,8 @@ RowKeys:
 
 ## 🧪 Try It Now
 
+
+**Interactive demos:**
 ```bash
 cd PartiSample
 dotnet run
@@ -275,6 +291,7 @@ Choose from 6 interactive demos showing real-world scenarios.
 
 ## 📚 Documentation
 
+- [Get Started Example](PartiSample.GetStarted/Program.cs) - Simple setup
 - [Sample Demos](PartiSample/Demos/) - Real-world examples
 - [Quick Start Guide](PartiSample/README.md) - Get started
 - [Big Data Tests](PartiTables.IntegrationTests/BigDataDemoTests.cs) - 10,000+ item examples
@@ -290,7 +307,7 @@ Choose from 6 interactive demos showing real-world scenarios.
 
 ## 📜 License
 
-MIT License — © 2025 PartiTech
+MIT License — © 2025 
 
 ---
 

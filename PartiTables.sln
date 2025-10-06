@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{40120FFC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartiTables.IntegrationTests", "PartiTables.IntegrationTests\PartiTables.IntegrationTests.csproj", "{F9B17057-E76F-44F7-90EF-2083980BB4A1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartiSample.GetStarted", "PartiSample.GetStarted\PartiSample.GetStarted.csproj", "{C5B1DD76-9F9E-494F-AC52-688158249234}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{F9B17057-E76F-44F7-90EF-2083980BB4A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9B17057-E76F-44F7-90EF-2083980BB4A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9B17057-E76F-44F7-90EF-2083980BB4A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5B1DD76-9F9E-494F-AC52-688158249234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5B1DD76-9F9E-494F-AC52-688158249234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5B1DD76-9F9E-494F-AC52-688158249234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5B1DD76-9F9E-494F-AC52-688158249234}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -38,6 +44,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{72BCAD59-298B-AF3C-0619-D2E4569C9A60} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F9B17057-E76F-44F7-90EF-2083980BB4A1} = {40120FFC-68B9-483B-9198-951DA1C5129A}
+		{C5B1DD76-9F9E-494F-AC52-688158249234} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {413E7A3A-B0D6-4AF1-8420-95A2DC7A6446}
