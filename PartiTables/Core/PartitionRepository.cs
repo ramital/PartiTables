@@ -493,6 +493,12 @@ public class PartitionRepository<T> where T : class, new()
             pkProp.SetValue(entity, partitionKey);
         }
 
+        // Dictionary to track which parent properties need to be populated
+        var parentPropertiesToPopulate = new Dictionary<string, object>();
+
+        // First pass: collect all row entities and extract parent properties
+        var collectionData = new List<(PropertyInfo prop, System.Collections.IList list, List<RowEntity> entities)>();
+
         foreach (var (propName, (prop, attr)) in _collections)
         {
             var collectionType = prop.PropertyType;
@@ -509,18 +515,157 @@ public class PartitionRepository<T> where T : class, new()
 
             var matchingRows = rows.Where(r => matcher(r.RowKey)).ToList();
 
+            // Check if this item type has a RowKeyPattern attribute
+            var patternAttr = itemType.GetCustomAttribute<RowKeyPatternAttribute>();
+
+            var entities = new List<RowEntity>();
             foreach (var tableEntity in matchingRows)
             {
                 if (Activator.CreateInstance(itemType) is RowEntity rowEntity)
                 {
                     rowEntity.FromTableEntity(tableEntity);
-                    list.Add(rowEntity);
+                    entities.Add(rowEntity);
+
+                    // Extract parent property values from row keys that have patterns
+                    // Keep extracting until we have all parent properties we need
+                    if (patternAttr != null)
+                    {
+                        ExtractParentPropertiesFromRowKey(
+                            tableEntity.RowKey, 
+                            patternAttr.Pattern, 
+                            rowEntity, 
+                            parentPropertiesToPopulate);
+                    }
                 }
             }
 
+            collectionData.Add((prop, list, entities));
+        }
+
+        // Apply extracted parent properties to the entity FIRST
+        foreach (var kvp in parentPropertiesToPopulate)
+        {
+            var parentProp = typeof(T).GetProperty(kvp.Key);
+            if (parentProp != null && parentProp.CanWrite)
+            {
+                try
+                {
+                    var targetType = Nullable.GetUnderlyingType(parentProp.PropertyType) ?? parentProp.PropertyType;
+                    var convertedValue = Convert.ChangeType(kvp.Value, targetType);
+                    parentProp.SetValue(entity, convertedValue);
+                }
+                catch
+                {
+                    // Skip properties that can't be converted
+                }
+            }
+        }
+
+        // Second pass: add entities to lists
+        foreach (var (prop, list, entities) in collectionData)
+        {
+            foreach (var rowEntity in entities)
+            {
+                list.Add(rowEntity);
+            }
             prop.SetValue(entity, list);
         }
 
         return entity;
+    }
+
+    private void ExtractParentPropertiesFromRowKey(
+        string rowKey, 
+        string pattern, 
+        object childEntity, 
+        Dictionary<string, object> parentProperties)
+    {
+        // Parse the row key using the pattern to extract parent property values
+        try
+        {
+            // Find all placeholders: {PropertyName}
+            var placeholderRegex = new System.Text.RegularExpressions.Regex(@"\{([^}]+)\}");
+            var placeholders = new List<(string name, int start, int length)>();
+            
+            foreach (System.Text.RegularExpressions.Match match in placeholderRegex.Matches(pattern))
+            {
+                placeholders.Add((match.Groups[1].Value, match.Index, match.Length));
+            }
+            
+            if (placeholders.Count == 0)
+                return;
+
+            // Build regex pattern by replacing each placeholder with a named capture group
+            var regexPattern = new System.Text.StringBuilder();
+            int lastIndex = 0;
+            
+            foreach (var (name, start, length) in placeholders)
+            {
+                // Add the literal text before this placeholder (escaped)
+                if (start > lastIndex)
+                {
+                    var literalPart = pattern.Substring(lastIndex, start - lastIndex);
+                    regexPattern.Append(System.Text.RegularExpressions.Regex.Escape(literalPart));
+                }
+                
+                // Add the capture group for this placeholder
+                regexPattern.Append($"(?<{name}>.+?)");
+                
+                lastIndex = start + length;
+            }
+            
+            // Add any remaining literal text
+            if (lastIndex < pattern.Length)
+            {
+                var literalPart = pattern.Substring(lastIndex);
+                regexPattern.Append(System.Text.RegularExpressions.Regex.Escape(literalPart));
+            }
+
+            // Match the full string
+            var finalPattern = "^" + regexPattern.ToString() + "$";
+            var regex = new System.Text.RegularExpressions.Regex(finalPattern);
+            var rowKeyMatch = regex.Match(rowKey);
+
+            if (rowKeyMatch.Success)
+            {
+                // Get child entity properties to check which placeholders are already on the child
+                var childType = childEntity.GetType();
+                
+                // Get the partition key property name to avoid overwriting it
+                var partitionKeyPropertyName = _partitionKeyTemplate.Trim('{', '}');
+
+                foreach (var (name, _, _) in placeholders)
+                {
+                    if (!rowKeyMatch.Groups[name].Success)
+                        continue;
+
+                    var value = rowKeyMatch.Groups[name].Value;
+
+                    // Check if this property exists on the child entity
+                    var childProp = childType.GetProperty(name);
+                    if (childProp != null)
+                    {
+                        // This is a child property, skip it (already populated via FromTableEntity)
+                        continue;
+                    }
+
+                    // Skip if this is the partition key property (already set from partition key)
+                    if (name == partitionKeyPropertyName)
+                    {
+                        continue;
+                    }
+
+                    // This must be a parent property, store it for later assignment
+                    if (!parentProperties.ContainsKey(name))
+                    {
+                        parentProperties[name] = value;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Silently skip rows that can't be parsed
+        }
     }
 }
