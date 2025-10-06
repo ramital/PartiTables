@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartiTables", "PartiTables\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartiSample", "PartiSample\PartiSample.csproj", "{72BCAD59-298B-AF3C-0619-D2E4569C9A60}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartiSample.Demos", "PartiSample\PartiSample.Demos.csproj", "{72BCAD59-298B-AF3C-0619-D2E4569C9A60}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{40120FFC-68B9-483B-9198-951DA1C5129A}"
 EndProject
