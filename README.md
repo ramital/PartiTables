@@ -342,8 +342,8 @@ Choose from 6 interactive demos showing real-world scenarios.
 ## 📚 Documentation
 
 - [Get Started Example](PartiSample.GetStarted/Program.cs) - Simple setup
-- [Sample Demos](PartiSample/Demos/) - Real-world examples
-- [Quick Start Guide](PartiSample/README.md) - Get started
+- [Sample Demos](PartiSample.Demos/) - Real-world examples
+- [Quick Start Guide](PartiSample.Demos/README.md) - Get started
 - [Big Data Tests](PartiTables.IntegrationTests/BigDataDemoTests.cs) - 10,000+ item examples
 
 ---
