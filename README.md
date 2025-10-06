@@ -38,7 +38,7 @@ services.AddPartitionRepository<User>();
 
 // Use it
 var custRepo = serviceProvider.GetRequiredService<PartitionRepository<Customer>>();
-var userRepo = serviceProvider.GetRequiredService<PartitionRepository<Customer>>();
+var userRepo = serviceProvider.GetRequiredService<PartitionRepository<User>>();
 ```
 
 ### Before vs After
