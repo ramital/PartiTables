@@ -54,11 +54,11 @@ await repo.SaveAsync(user);
 
 | PartitionKey | RowKey | Properties |
 |-------------|--------|------------|
-| `tenantA_123` | `meta` | FirstName, LastName, DOB, Email, Status |
-| `tenantA_123` | `consent#20251002` | ConsentId, Type, Timestamp, Status |
-| `tenantA_123` | `consent#20250915` | ConsentId, Type, Timestamp, Status |
-| `tenantA_123` | `device#D123` | DeviceId, SerialNumber, Model, RegisteredAt |
-| `tenantA_123` | `audit#ULID123` | Action, PerformedAt, ActorId |
+| `tenantA_123` | `user12_meta` | FirstName, LastName, DOB, Email, Status |
+| `tenantA_123` | `user12_consent#20251002` | ConsentId, Type, Timestamp, Status |
+| `tenantA_123` | `user12_consent#20250915` | ConsentId, Type, Timestamp, Status |
+| `tenantA_123` | `user12_device#D123` | DeviceId, SerialNumber, Model, RegisteredAt |
+| `tenantA_123` | `user12_audit#ULID123` | Action, PerformedAt, ActorId |
 
 **🚀 Benefits:**
 - Query all user data with ONE request: `await repo.FindAsync("tenantA_123")`
